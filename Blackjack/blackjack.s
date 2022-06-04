@@ -1,22 +1,21 @@
 .global _start
 _start:
+	// Reset 7-segment in reload
+	LDR R0, =0xff200020
+	MOV R1, #0
+	STR R1, [R0]
+	STR R1, [R0, #16]
 	// Timer is configured below. This timer will run nonstop through program.
 	LDR R0, =0xFFFEC600
 	LDR R1, =20000000
 	STR R1, [R0]
     
 	
-	MOV R1, #3
+	MOV R1, #3 
 	STR R1, [R0, #8] // Start & loop the timer.
 	MOV R3, #0 // player's value
 	MOV R4, #0 // dealer's value
-	
-	//MOV R2, R3
-	//BL ADDCARD
-	//BL ADDCARD
-	//MOV R3, R2
-	//MOV R2, #0
-
+			
 	LOOP:
 	LDR R0, =0xFF200050 // Pushbutton key address.
 	LDR R1, [R0, #12]
@@ -67,15 +66,12 @@ _start:
 		LDR R3, =0xff200020 // address of 7-segment display
 		LDR R4, =HEXDISPLAYCARDS
 		LDR R5, =CARDVALUES
-		LDR R4, [R4, R1, LSL #2]   // 4 * 10   J
-		//test start
+		LDR R4, [R4, R1, LSL #2] // load the memory address of cards' hex values
 		LDR R8, [R3]
 		BIC R8, R8, #255
 		ADD R4, R4, R8
-		// test end
 		STR R4, [R3] // display the drawn card
 		BL DO_DELAY
-		
 		
 		//Exception, when card sum is less than 10, value of ACE is automatically 11
 		CMP R1, #0
@@ -103,36 +99,50 @@ _start:
 		STR R5, [R3]
 		POP {R0, R1, R3-R6, PC}
 		
-	DO_DELAY: LDR R8, =2000000 // delay counter
-		SUB_LOOP: SUBS R8, R8, #1
-		BNE SUB_LOOP
-		BX LR
+	
 
 	WINLOSE:
+		CMP R3, R4
+		MOVEQ R0, #2 // tie
+		BEQ SHOWRESULT
 	
 		CMP R3, #21
-		CMPLE R3, R4
-		MOVGT R0, #0
-		//MOVLT R0, #1
-		MOVEQ R0, #2
-		CMPLT R4, #21
-		MOVGT R0, #0
-		MOVLE R0, #1
-		
-		CMP R3, #21
-		CMPGT R4, #21
-		MOVGT R0, #2
-		MOVLE R0, #1
-		
+		BLE WIN
+		BGT LOSE
+	
+	WIN:
+	CMP R3, R4
+	MOVGT R0, #0
+	MOVLT R0, #1
+	CMP R0, #0
+	BEQ SHOWRESULT
+	CMPNE R4, #21
+	MOVLE R0, #1
+	MOVGT R0, #0
+	B SHOWRESULT
+	
+	LOSE:
+	CMP R4, #21
+	MOVGT R0, #2 // both are above 21
+	MOVLE R0, #1
+	B SHOWRESULT
+							
+	SHOWRESULT:
 		LDR R10, =CONDITIONS
 		LDR R11, [R10, R0, LSL #2]
 		
 		LDR R12, =0xff200020
 		STR R11, [R12]
-		
+	
 		end: B end
 		
-		
+	DO_DELAY: 
+		PUSH {R8, lr}
+		LDR R8, =2000000 // delay counter
+		SUB_LOOP: SUBS R8, R8, #1
+		BNE SUB_LOOP
+		POP {R8, PC}
+				
 
 CARDSLEFT: .word 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4
 // Corresponding hex values to display all cards (13)
@@ -142,3 +152,8 @@ HEXTABLE: .word 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F, 0x06
 // Values of each different cards(total of 13)  A's value should be 11 if the current value is below 10
 CARDVALUES: .word 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xA, 0xA, 0xA, 0xB 
 CONDITIONS: .word 0x3C1E5C54, 0x385C6D78, 0x00783079
+
+	
+	
+	
+	
