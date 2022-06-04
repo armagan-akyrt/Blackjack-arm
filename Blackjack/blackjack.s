@@ -42,6 +42,9 @@ _start:
 	MOV R4, R2
 	MOV R2, #0
 	
+	CMP R3, #17
+	CMPGE R4, #17
+	BGE WINLOSE
 	
 	B LOOP
 	// A subroutine that adds a random card to players roster on demand.
@@ -105,6 +108,34 @@ _start:
 		BNE SUB_LOOP
 		BX LR
 
+	WINLOSE:
+	
+		CMP R3, #21 // player compared w/ 21
+		MOVGT R0, #1 // Lose index
+		MOVLT R0, #0 // Win index
+		
+		CMP R4, #21 // dealer compared w/ 21
+		MOVGT R1, #0 //Win index
+		MOVLT R1, #1 // Lose index
+		
+		CMP R0, R1
+		MOVNE R0, #2 //Tie
+		
+		
+		CMP R3, R4 // player & dealer are compared
+		MOVEQ R0, #2 // Win
+		MOVGT R0, #0 // Tie
+		MOVLT R0, #1 // Lose
+		
+		LDR R10, =CONDITIONS
+		LDR R11, [R10, R0, LSL #2]
+		
+		LDR R12, =0xff200020
+		STR R11, [R12]
+		
+		end: B end
+		
+		
 
 CARDSLEFT: .word 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4
 // Corresponding hex values to display all cards (13)
@@ -113,3 +144,4 @@ HEXDISPLAYCARDS: .word 0x77, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07,0x7F,0x6F, 0x063
 HEXTABLE: .word 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F, 0x063F, 0x0606, 0x065B, 0x064F, 0x0666, 0x066D, 0x067D, 0x0607, 0x067F, 0x066F, 0x5B3F, 0x5B06, 0x5B5B, 0x5B4F, 0x5B66, 0x5B6D, 0x5B7D
 // Values of each different cards(total of 13)  A's value should be 11 if the current value is below 10
 CARDVALUES: .word 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xA, 0xA, 0xA, 0xB 
+CONDITIONS: .word 0x3C1E5C54, 0x385C6D78, 0x00783079
