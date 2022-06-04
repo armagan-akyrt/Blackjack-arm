@@ -24,16 +24,19 @@ _start:
 	B LOOP
 	
 	// A subroutine that adds a random card to players roster on demand.
+	// Takes card value to r2, returns drawn card to r3, 
 	ADDCARD: PUSH {R0, R1, LR}
 		
 		DRAWCARD:
 		LDR R0, =0xFFFEC600
 		LDR R1, [R0, #4] // Get the random value
 		
-		AND R1, R1, #0b1111 // mask last4 bits
-		SUBS R1, #12 // Division by 13
-		BGE DRAWCARD // If number is greater than 12, draw again
-		ADDLT R1, #12 // if number is less than 12, continue
+		
+		AND R1, R1, #0b1111 // mask last 4 bits
+		SUBS R1, #12 // Division by 13 
+		BGT DRAWCARD // If number is greater than 12, draw again
+		ADDLE R1, #12 // if number is less than 12, continue
+		
 		
 		
 		//Exception, when card sum is less than 10, value of ACE is automatically 11
@@ -49,5 +52,5 @@ _start:
 
 
 HEXCARDS: .byte 0x0, 0x0, 0x0, 0x0 // These values will be for the hexadecimal card values.
-CARDS:.byte 0x1, 0x2, 0x2, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xa, 0xa, 0xa, 0xb, 0x0, 0x0
+CARDS:.byte 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xa, 0xa, 0xa, 0xa, 0xb, 0x0, 0x0
 CARDSLEFT: .byte 0x4, 0x4, 0x4, 0x4, 0x4, 0x4,0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x0, 0x0, 0x0
