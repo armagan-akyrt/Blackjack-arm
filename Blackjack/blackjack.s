@@ -110,22 +110,19 @@ _start:
 
 	WINLOSE:
 	
-		CMP R3, #21 // player compared w/ 21
-		MOVGT R0, #1 // Lose index
-		MOVLT R0, #0 // Win index
+		CMP R3, #21
+		CMPLE R3, R4
+		MOVGT R0, #0
+		//MOVLT R0, #1
+		MOVEQ R0, #2
+		CMPLT R4, #21
+		MOVGT R0, #0
+		MOVLE R0, #1
 		
-		CMP R4, #21 // dealer compared w/ 21
-		MOVGT R1, #0 //Win index
-		MOVLT R1, #1 // Lose index
-		
-		CMP R0, R1
-		MOVNE R0, #2 //Tie
-		
-		
-		CMP R3, R4 // player & dealer are compared
-		MOVEQ R0, #2 // Win
-		MOVGT R0, #0 // Tie
-		MOVLT R0, #1 // Lose
+		CMP R3, #21
+		CMPGT R4, #21
+		MOVGT R0, #2
+		MOVLE R0, #1
 		
 		LDR R10, =CONDITIONS
 		LDR R11, [R10, R0, LSL #2]
