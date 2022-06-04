@@ -1,10 +1,6 @@
 .global _start
 _start:
 
-MOV R12, # 23
-MOV R11, #13
-AND R12, R11
-
 
 	// Timer is configured below. This timer will run nonstop through program.
 	LDR R0, =0xFFFEC600
@@ -18,20 +14,26 @@ AND R12, R11
 	LDR R0, =0xFF200050 // Pushbutton key address.
 	LDR R1, [R0, #12]
 	
+	// Player draws a card
 	CMP R1, #1 // Edgecapture check for 1 (draw a card)
 	STREQ R1, [R0, #12]
 	BLEQ ADDCARD
 	
+	//Dealer (machine) draws a card
 	
 	B LOOP
 	
 	// A subroutine that adds a random card to players roster on demand.
 	ADDCARD: PUSH {R0, R1, LR}
-	
+		
+		DRAWCARD:
 		LDR R0, =0xFFFEC600
 		LDR R1, [R0, #4] // Get the random value
 		
-		SUBS R1, #13 // Division by 13
+		AND R1, R1, #0b1111 // mask last4 bits
+		SUBS R1, #12 // Division by 13
+		BGE DRAWCARD // If number is greater than 12, draw again
+		ADDLT R1, #12 // if number is less than 12, continue
 		
 		
 		//Exception, when card sum is less than 10, value of ACE is automatically 11
