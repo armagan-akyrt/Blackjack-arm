@@ -14,6 +14,7 @@ _start:
 	STR R1, [R0, #8] // Start & loop the timer.
 	MOV R3, #0 // player's value
 	MOV R4, #0 // dealer's value
+	MOV R7, #0 // turn indicator
 			
 	LOOP:
 	LDR R0, =0xFF200050 // Pushbutton key address.
