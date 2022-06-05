@@ -1,5 +1,7 @@
 .global _start
 _start:
+	
+
 	// Reset 7-segment in reload
 	LDR R0, =0xff200020
 	MOV R1, #0
@@ -20,6 +22,10 @@ _start:
 	LDR R0, =0xFF200050 // Pushbutton key address.
 	LDR R1, [R0, #12]
 	
+	// if anything other than key0 is pressed, resets edge capture
+	CMP R1, #2
+	STRGE R1, [R0, #12]
+	
 	// Player draws a card
 	MOV R7, #0
 	CMP R1, #1 // Edgecapture check for 1 (draw a card)
@@ -28,6 +34,7 @@ _start:
 	BLEQ ADDCARD
 	MOV R3, R2
 	MOV R2, #0
+	
 	
 	//Delay
 	CMP R1, #1
@@ -77,7 +84,8 @@ _start:
 		LDR R5, =CARDVALUES
 		LDR R4, [R4, R1, LSL #2] // load the memory address of cards' hex values
 		LDR R8, [R3]
-		BIC R8, R8, #255
+		LDR R12, =0b1111111111111111
+		BIC R8, R8, R12
 		ADD R4, R4, R8
 		STR R4, [R3] // display the drawn card
 		BL DO_DELAY
@@ -100,10 +108,12 @@ _start:
 						
 		POP {R0, R1, R3-R8, PC}
 		
-	WRITE:
+	// this writes the values of dealer to the 7-segment	
+	WRITE: 
 		LDR R5, [R3]
 		LSL R4, #16
-		AND R5, #255
+		
+		AND R5, R12
 		ADD R5, R5, R4
 		STR R5, [R3]
 		POP {R0, R1, R3-R8, PC}
@@ -150,23 +160,48 @@ _start:
 		
 		LDR R12, =0xff200020 // address of seven-segment displays
 		STR R11, [R12] // necessary result is shown in seven-segment displays
+		
+		B RESETDECK
 	
-		end: B end
+	// reset the deck ( write every ememory slot corresponign a card: 4)
+	RESETDECK:
+	
+	LDR R0, =CARDSLEFT
+	MOV R1, #0 // initial index of the deck
+	
+	MOV R2, #4 // four cards of each type
+	
+	TAG: // to return untill index is last
+	CMP R1, #12
+	STRLE R2, [R0, R1, LSL #2] 
+	ADDLE R1, #1
+	BLE TAG
+	
+	B end
 	
 	// A subroutine that is used to put a time delay in wanted conditions
 	DO_DELAY: 
 		PUSH {R8, lr}
-		LDR R8, =2000000 // delay counter
+		LDR R8, =3548654 // delay counter
 		SUB_LOOP: SUBS R8, R8, #1
 		BNE SUB_LOOP
 		POP {R8, PC}
-				
-
-CARDSLEFT: .word 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4
+		
+		end: 
+		
+		LDR R0, =0xFF200050 // Pushbutton key address.
+		LDR R1, [R0, #12]
+		
+		CMP R1,#8 // if key3 is pressed, restarts the game.
+		STRGE R1, [R0, #12]
+		BGE _start
+		B end
 // Corresponding hex values to display all cards (13)
-HEXDISPLAYCARDS: .word 0x77, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07,0x7F,0x6F, 0x063F, 0xE, 0xE7 , 0x75
+CARDSLEFT: .word 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4, 0x4
 // HEX VAlUES of numbers 0-26 to display
-HEXTABLE: .word 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F, 0x063F, 0x0606, 0x065B, 0x064F, 0x0666, 0x066D, 0x067D, 0x0607, 0x067F, 0x066F, 0x5B3F, 0x5B06, 0x5B5B, 0x5B4F, 0x5B66, 0x5B6D, 0x5B7D
+HEXDISPLAYCARDS: .word 0x77, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07,0x7F,0x6F, 0x063F, 0xE, 0xE7 , 0x75
 // Values of each different cards(total of 13)  A's value should be 11 if the current value is below 10
+HEXTABLE: .word 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F, 0x063F, 0x0606, 0x065B, 0x064F, 0x0666, 0x066D, 0x067D, 0x0607, 0x067F, 0x066F, 0x5B3F, 0x5B06, 0x5B5B, 0x5B4F, 0x5B66, 0x5B6D, 0x5B7D
+
 CARDVALUES: .word 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xA, 0xA, 0xA, 0xB 
 CONDITIONS: .word 0x3C1E5C54, 0x385C6D78, 0x00783079
