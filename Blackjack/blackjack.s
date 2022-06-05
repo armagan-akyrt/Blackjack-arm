@@ -48,11 +48,11 @@ _start:
 	B LOOP
 	// A subroutine that adds a random card to players roster on demand.
 	// Takes card value to r2, returns drawn card to r3, 
-	ADDCARD: PUSH {R0, R1, R3-R6, lr}
+	ADDCARD: PUSH {R0, R1, R3-R8, lr}
 		
 		DRAWCARD:
 		CMP R2, #17
-		POPGE {R0, R1, R3-R6, PC}
+		POPGE {R0, R1, R3-R8, PC}
 		LDR R0, =0xFFFEC600
 		LDR R1, [R0, #4] // Get the random value
 		
@@ -98,7 +98,7 @@ _start:
 		STREQ R4, [R3, #16] // write to 7-segment
 		BGT WRITE
 						
-		POP {R0, R1, R3-R6, PC}
+		POP {R0, R1, R3-R8, PC}
 		
 	WRITE:
 		LDR R5, [R3]
@@ -106,7 +106,7 @@ _start:
 		AND R5, #255
 		ADD R5, R5, R4
 		STR R5, [R3]
-		POP {R0, R1, R3-R6, PC}
+		POP {R0, R1, R3-R8, PC}
 		
 	
 
