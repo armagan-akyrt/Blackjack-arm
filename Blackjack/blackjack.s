@@ -62,6 +62,15 @@ _start:
 		ADDLE R1, #12 // if number is less than 12, continue
 		
 		
+		ROSTERCHECK:
+		LDR R3, =CARDSLEFT
+		LDR R4, [R3, R1, LSL #2] // number of cards left of that type
+		
+		SUBS R4, #1
+			STRPL R4, [R3, R1, LSL #2]
+			BPL DISPLAYDRAWNCARD // if drawn card is negative, branch to display
+			BMI DRAWCARD  // if negative draw again.
+		
 		DISPLAYDRAWNCARD:
 		LDR R3, =0xff200020 // address of 7-segment display
 		LDR R4, =HEXDISPLAYCARDS
@@ -152,8 +161,3 @@ HEXTABLE: .word 0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F, 0x06
 // Values of each different cards(total of 13)  A's value should be 11 if the current value is below 10
 CARDVALUES: .word 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xA, 0xA, 0xA, 0xA, 0xB 
 CONDITIONS: .word 0x3C1E5C54, 0x385C6D78, 0x00783079
-
-	
-	
-	
-	
