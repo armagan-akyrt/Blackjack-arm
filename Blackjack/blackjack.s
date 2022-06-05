@@ -110,41 +110,50 @@ _start:
 		
 	
 
+	// A subroutine that performs the necessary operations to show the result on the seven-segment displays.
 	WINLOSE:
-		CMP R3, R4
+		CMP R3, R4 // Compare the card sum of the player(R3), and the dealer(R4)
 		MOVEQ R0, #2 // tie
-		BEQ SHOWRESULT
+		BEQ SHOWRESULT // Shows the results in seven-segment displays
 	
 		CMP R3, #21
-		BLE WIN
-		BGT LOSE
+		BLE WIN //  card sum < 21 condition
+		BGT LOSE // card sum > 21 condition
 	
+	// A subroutine that is used in WINLOSE subroutine to consider the cases which 
+	// the player has the card sum equal to or less than 21.
 	WIN:
 	CMP R3, R4
-	MOVGT R0, #0
-	MOVLT R0, #1
+	MOVGT R0, #0 // win
+	MOVLT R0, #1 // lose
 	CMP R0, #0
-	BEQ SHOWRESULT
+	BEQ SHOWRESULT // Shows the results in seven-segment displays
 	CMPNE R4, #21
-	MOVLE R0, #1
-	MOVGT R0, #0
-	B SHOWRESULT
+	MOVLE R0, #1 // lose
+	MOVGT R0, #0 // win
+	B SHOWRESULT // Shows the results in seven-segment displays
 	
+	// A subroutine that is used in WINLOSE subroutine to consider the cases which 
+	// the player has the card sum above 21.
 	LOSE:
 	CMP R4, #21
-	MOVGT R0, #2 // both are above 21
-	MOVLE R0, #1
-	B SHOWRESULT
-							
+	MOVGT R0, #2 // both are above 21 -> TIE
+	MOVLE R0, #1 // dealer has card sum between 17-21 -> LOSE
+	B SHOWRESULT // Shows the results in seven-segment displays
+	
+	// This subroutine takes the indexes (0, 1, 2) representing
+	// win, lose, and tie in order. Then shows the result on the
+	// seven-segment display.
 	SHOWRESULT:
-		LDR R10, =CONDITIONS
-		LDR R11, [R10, R0, LSL #2]
+		LDR R10, =CONDITIONS  // win, lose, tie
+		LDR R11, [R10, R0, LSL #2] // index is multiplied by 4 due to use of words in allocation
 		
-		LDR R12, =0xff200020
-		STR R11, [R12]
+		LDR R12, =0xff200020 // address of seven-segment displays
+		STR R11, [R12] // necessary result is shown in seven-segment displays
 	
 		end: B end
-		
+	
+	// A subroutine that is used to put a time delay in wanted conditions
 	DO_DELAY: 
 		PUSH {R8, lr}
 		LDR R8, =2000000 // delay counter
